@@ -13,3 +13,5 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+  flyway:
+    baseline-on-migrate: true
