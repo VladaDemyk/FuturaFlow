@@ -18,6 +18,8 @@ public class User {
     private String dateOfBirth;
     private String phone;
 
+    public User() {}
+
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
     private String password;
