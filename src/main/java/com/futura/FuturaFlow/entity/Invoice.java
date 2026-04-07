@@ -16,10 +16,11 @@ public class Invoice {
 
     @Column(nullable = false)
     private BigDecimal amount; // Сума (BigDecimal ідеально підходить для грошей)
-
+    private String status;
     @Column(nullable = false)
-    private String filePath; // Саме сюди ми запишемо шлях до файлу з нашого FileStorageService
-
+    private String filePath; 
+    @Column(nullable = true) // Дозволяємо бути порожнім, бо для PDF прев'ю ми не генеруємо
+    private String thumbnailPath;
     // --- Обов'язковий порожній конструктор для Spring ---
     public Invoice() {}
 
@@ -35,4 +36,8 @@ public class Invoice {
 
     public String getFilePath() { return filePath; }
     public void setFilePath(String filePath) { this.filePath = filePath; }
+    public String getThumbnailPath() { return thumbnailPath; }
+    public void setThumbnailPath(String thumbnailPath) { this.thumbnailPath = thumbnailPath; }
+    public String getStatus() { return status;}
+    public void setStatus(String status) { this.status = status;}
 }

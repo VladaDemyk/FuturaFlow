@@ -6,6 +6,9 @@ import com.futura.FuturaFlow.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -56,5 +59,18 @@ public class InvoiceController {
 
         // Повертаємо їх клієнту зі статусом 200 OK
         return ResponseEntity.ok(invoices);
+    }
+    @GetMapping("/active")
+    public ResponseEntity<Page<Invoice>> getActiveRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        // Створюємо об'єкт з налаштуваннями пагінації
+        Pageable paging = PageRequest.of(page, size);
+
+        // Передаємо ДВА параметри: статус і налаштування сторінки
+        Page<Invoice> activeInvoices = invoiceRepository.findByStatus("ACTIVE", paging);
+
+        return ResponseEntity.ok(activeInvoices);
     }
 }
