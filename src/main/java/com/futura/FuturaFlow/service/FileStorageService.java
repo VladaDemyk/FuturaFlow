@@ -66,4 +66,16 @@ public class FileStorageService {
         // 5. Повертаємо масив з двох шляхів: [0] - оригінал, [1] - прев'ю
         return new String[]{originalFilePath.toString(), finalThumbPath};
     }
+
+    public void deleteFile(String filePath) {
+        if (filePath == null || filePath.isBlank()) {
+            return;
+        }
+
+        try {
+            Files.deleteIfExists(Paths.get(filePath));
+        } catch (IOException e) {
+            throw new RuntimeException("Не вдалося видалити файл: " + filePath, e);
+        }
+    }
 }

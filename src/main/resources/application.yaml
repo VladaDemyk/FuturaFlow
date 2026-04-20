@@ -3,13 +3,13 @@ spring:
   application:
     name: FuturaFlow
   datasource:
-    url: jdbc:mysql://futuraflow-03-harbar-0dc7.l.aivencloud.com:12189/defaultdb?sslMode=REQUIRED
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:mysql://avnadmin:AVNS_4LWTufJ3xfyC3Z7dfUE@futuraflow-03-harbar-0dc7.l.aivencloud.com:12189/defaultdb?ssl-mode=REQUIRED
+    username: avnadmin
+    password: AVNS_4LWTufJ3xfyC3Z7dfUE
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:

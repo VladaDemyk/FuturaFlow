@@ -15,10 +15,16 @@ public class Invoice {
     private String invoiceNumber; // Номер чека або інвойсу
 
     @Column(nullable = false)
-    private BigDecimal amount; // Сума (BigDecimal ідеально підходить для грошей)
+    private BigDecimal amount;// Сума (BigDecimal ідеально підходить для грошей)
+    @Column(name = "percentage")
+    private Double percentage; // Відсоток по інвойсу
+    @Column(nullable = true)
     private String status;
     @Column(nullable = false)
-    private String filePath; 
+    private String filePath;
+    @ManyToOne
+    @JoinColumn(name = "fop_id", nullable = false)
+    private Fop fop;
     @Column(nullable = true) // Дозволяємо бути порожнім, бо для PDF прев'ю ми не генеруємо
     private String thumbnailPath;
     // --- Обов'язковий порожній конструктор для Spring ---
@@ -40,4 +46,8 @@ public class Invoice {
     public void setThumbnailPath(String thumbnailPath) { this.thumbnailPath = thumbnailPath; }
     public String getStatus() { return status;}
     public void setStatus(String status) { this.status = status;}
+    public Fop getFop() { return fop; }
+    public void setFop(Fop fop) { this.fop = fop; }
+    public Double getPercentage() { return percentage; }
+    public void setPercentage(Double percentage) { this.percentage = percentage; }
 }
