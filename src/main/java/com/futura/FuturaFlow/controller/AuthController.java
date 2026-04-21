@@ -13,28 +13,30 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // Spring автоматично знайде наш AuthService і передасть його сюди
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
+    // --- 1. МЕТОД ДЛЯ ЛОГІНУ ---
     @PostMapping("/login")
     public ResponseEntity<String> loginUser(@Valid @RequestBody LoginRequestDTO loginRequest) {
-
-        // 1. Передаємо дані з DTO в наш сервіс для перевірки в базі даних
         boolean isAuthenticated = authService.authenticate(
                 loginRequest.getEmail(),
                 loginRequest.getPassword()
         );
 
-        // 2. Формуємо правильну HTTP-відповідь на основі результату
         if (isAuthenticated) {
-            // Статус 200 OK
             return ResponseEntity.ok("Вхід успішний! Вітаємо в системі.");
         } else {
-            // Статус 401 Unauthorized (Неавторизовано)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Помилка: Невірний email або пароль.");
         }
+    }
+
+    // --- 2. МЕТОД ДЛЯ РЕЄСТРАЦІЇ ---
+    @PostMapping("/register")
+    public ResponseEntity<String> registerUser(@Valid @RequestBody LoginRequestDTO registerRequest) {
+        authService.registerUser(registerRequest.getEmail(), registerRequest.getPassword());
+        return ResponseEntity.ok("Реєстрація успішна! Тепер ви можете увійти.");
     }
 }
