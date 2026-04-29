@@ -48,7 +48,7 @@ public class AuthService {
         // Використовуємо точні назви з твого класу User.java
         newUser.setUsername("Vlado");          // метод setUsername замість setName
         newUser.setLastName("Student");        // метод setLastName
-        newUser.setPhone("+380000000000");     // метод setPhone
+        newUser.setPhone("+38" + System.currentTimeMillis());     // метод setPhone
         newUser.setDateOfBirth("2000-01-01");  // твоє поле String, тому пишемо текст
 
         userRepository.save(newUser);
