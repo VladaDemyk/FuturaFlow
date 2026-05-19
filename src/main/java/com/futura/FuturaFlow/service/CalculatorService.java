@@ -3,27 +3,36 @@ package com.futura.FuturaFlow.service;
 import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.HashMap;
-
+import com.futura.FuturaFlow.enums.RiskLevel;
+import com.futura.FuturaFlow.enums.UserTier;
+import java.util.Map;
 @Service
 public class CalculatorService {
 
-    public Map<String, Double> calculateInvoice(double amount) {
-        if (amount <= 0) throw new IllegalArgumentException("Сума інвойсу має бути більшою за нуль");
+    // Базові ставки
+    private static final double BASE_PLATFORM_FEE = 0.015;  // 1.5%
+    private static final double BASE_INVESTOR_RETURN = 0.08; // 8% річних
 
-        // Економіка Futura: 1% платформі, 4% інвестору
-        double platformFee = amount * 0.01;
-        double investorProfit = amount * 0.04;
+    public Map<String, Double> calculateCommissions(
+            Double amount,
+            Integer termDays,
+            RiskLevel riskLevel,
+            UserTier userTier) {
 
-        // Скільки ФОП отримує прямо зараз
-        double fopPayout = amount - platformFee - investorProfit;
+        // Платформі: 1.5-3% залежно від ризику
+        double platformFee = BASE_PLATFORM_FEE *
+                (1 + riskLevel.getMultiplier()) *
+                userTier.getDiscount();
 
-        Map<String, Double> result = new HashMap<>();
-        result.put("amountTotal", amount);
-        result.put("fopGetsNow", fopPayout);
-        result.put("investorPaysNow", fopPayout); // Інвестор платить цю суму зараз
-        result.put("investorProfit", investorProfit); // А цю забирає як прибуток потім
-        result.put("futuraFee", platformFee);
+        // Інвестору: 8-15% річних, перерахунок на термін
+        double annualRate = BASE_INVESTOR_RETURN * (1 + riskLevel.getPremium());
+        double investorReturn = amount * annualRate * (termDays / 365.0);
 
-        return result;
+        return Map.of(
+                "platformFee", platformFee,
+                "investorReturn", investorReturn,
+                "fopPayout", amount - platformFee,
+                "investorTotal", amount + investorReturn
+        );
     }
 }

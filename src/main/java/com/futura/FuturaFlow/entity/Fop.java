@@ -16,6 +16,15 @@ public class Fop {
     @Column(unique = true, nullable = false)
     private String inn; // ІПН (ідентифікаційний код)
 
+    @Column(name = "ipn", length = 10)
+    private String ipn; // Ідентифікаційний код (РНОКПП) - критично для YouControl
+
+    @Column(name = "passport_data")
+    private String passportData; // Наприклад: "НТ123456 виданий..." - для договору
+
+    @Column(name = "legal_address")
+    private String legalAddress; // Юридична адреса - для договору
+
     // --- Обов'язковий порожній конструктор ---
     public Fop() {}
 

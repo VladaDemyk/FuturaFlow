@@ -110,19 +110,21 @@ public class AuthController {
     // --- НОВА ЛОГІКА: MOCK BANKID (Заглушка) ---
     @PostMapping("/bankid-mock")
     public ResponseEntity<?> mockBankIdLogin() {
-        // 1. Імітуємо дані ФОПа, які нібито прийшли від BankID
+        // 1. Імітуємо ПОВНИЙ пакет юридичних даних від BankID
         Map<String, String> fopUser = new HashMap<>();
         fopUser.put("fullName", "Дмитренко В.О.");
-        fopUser.put("inn", "1234567890");
+        fopUser.put("ipn", "3216549870"); // Ключ для перевірки ризиковості YouControl
+        fopUser.put("passportData", "НТ123456, виданий 12.05.2015 Франківським РВ ЛМУ ГУМВС України у Львівській обл.");
+        fopUser.put("legalAddress", "м. Львів, вул. Степана Бандери, 12");
         fopUser.put("role", "FOP");
 
-        // 2. Генеруємо справжній JWT токен (використовуємо твій існуючий ключ jwtSecretKey)
+        // 2. Генеруємо справжній JWT токен
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + JWT_EXPIRATION_MS);
 
         String jwt = Jwts.builder()
-                .setSubject(fopUser.get("inn")) // Зашиваємо ІПН як ідентифікатор
-                .claim("role", fopUser.get("role")) // Додаємо роль ФОПа
+                .setSubject(fopUser.get("ipn")) // Тепер токен безпечно прив'язаний до ІПН
+                .claim("role", fopUser.get("role"))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(jwtSecretKey)
@@ -130,7 +132,7 @@ public class AuthController {
 
         // 3. Формуємо відповідь для фронтенду
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "BankID верифікація успішна");
+        response.put("message", "BankID верифікація успішна. Юридичні дані отримано.");
         response.put("user", fopUser);
         response.put("token", jwt);
 
