@@ -110,6 +110,18 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Потрібно для Mockito на Java 21+ (дозволяє динамічне завантаження агентів) -->
+					<argLine>
+						-XX:+EnableDynamicAgentLoading
+						--add-opens java.base/java.lang=ALL-UNNAMED
+						--add-opens java.base/java.util=ALL-UNNAMED
+					</argLine>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

@@ -1,0 +1,508 @@
+{
+  "info": {
+    "name": "FuturaFlow API",
+    "description": "Колекція для тестування всіх REST API ендпоінтів системи FuturaFlow.\n\nЯк використовувати:\n1. Запусти Spring Boot сервер (mvn spring-boot:run)\n2. Імпортуй цей файл у Postman (File → Import)\n3. Виконуй запити по порядку (спочатку Auth, потім решта)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT токен — заповнюється автоматично після логіну"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Реєстрація користувача",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"Іван\",\n  \"lastName\": \"Петренко\",\n  \"email\": \"ivan@futura.com\",\n  \"password\": \"SecurePass123\",\n  \"phone\": \"+380501234567\",\n  \"dateOfBirth\": \"1995-03-15\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Вхід (Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Автоматично зберігаємо токен після логіну",
+                  "if (pm.response.code === 200) {",
+                  "    var responseBody = pm.response.text();",
+                  "    pm.collectionVariables.set('authToken', responseBody);",
+                  "    console.log('Токен збережено:', responseBody);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ivan@futura.com\",\n  \"password\": \"SecurePass123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Вхід через Google (Mock)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', json.token);",
+                  "    console.log('Google JWT збережено');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/google", "host": ["{{baseUrl}}"], "path": ["api", "auth", "google"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fake-google-token-for-testing\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BankID Mock (верифікація ФОП)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Відповідь містить токен', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.collectionVariables.set('authToken', json.token);",
+                  "});",
+                  "pm.test('Відповідь містить дані ФОП', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.user.ipn).to.exist;",
+                  "    pm.expect(json.user.role).to.eql('FOP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/bankid-mock", "host": ["{{baseUrl}}"], "path": ["api", "auth", "bankid-mock"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cards (Картки)",
+      "item": [
+        {
+          "name": "Отримати всі картки",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Відповідь є масивом', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/cards", "host": ["{{baseUrl}}"], "path": ["api", "cards"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Видалити картку за ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Успішне видалення (200) або не знайдено (404)', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/cards/1", "host": ["{{baseUrl}}"], "path": ["api", "cards", "1"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transactions (Транзакції)",
+      "item": [
+        {
+          "name": "Загальний баланс (Summary)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Відповідь містить totalBalance і totalPayouts', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('totalBalance');",
+                  "    pm.expect(json).to.have.property('totalPayouts');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/transactions/summary", "host": ["{{baseUrl}}"], "path": ["api", "transactions", "summary"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Історія транзакцій (з пагінацією)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Відповідь має поля пагінації', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('content');",
+                  "    pm.expect(json).to.have.property('totalElements');",
+                  "    pm.expect(json).to.have.property('totalPages');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/history?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "history"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Історія транзакцій з фільтром (profit)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/history?type=profit&page=0&size=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "history"],
+              "query": [
+                { "key": "type", "value": "profit" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Invoices (Інвойси)",
+      "item": [
+        {
+          "name": "Всі інвойси",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Відповідь є масивом', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/all", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "all"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Активні інвойси (з пагінацією)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/active?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "active"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Завантажити інвойс (Upload)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/upload", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "upload"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Виберіть PDF або зображення інвойсу" },
+                { "key": "invoiceNumber", "value": "INV-2024-001", "type": "text" },
+                { "key": "amount", "value": "5000.00", "type": "text" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Фільтр по сумі",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/filter?minAmount=1000&maxAmount=10000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "filter"],
+              "query": [
+                { "key": "minAmount", "value": "1000" },
+                { "key": "maxAmount", "value": "10000" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Фільтр по відсотку",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/filter/percentage?minPercent=5.0&maxPercent=15.0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "filter", "percentage"],
+              "query": [
+                { "key": "minPercent", "value": "5.0" },
+                { "key": "maxPercent", "value": "15.0" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Викупити інвойс (Redeem)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Відповідь: успіх або помилка бізнес-логіки', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/1/redeem", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "1", "redeem"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Видалити інвойс",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 або 404', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/1", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "1"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Оновити файл інвойсу",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 або 404', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 500]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/invoices/1/file", "host": ["{{baseUrl}}"], "path": ["api", "invoices", "1", "file"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Новий файл для заміни старого" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users (Профіль)",
+      "item": [
+        {
+          "name": "Отримати профіль користувача",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Відповідь містить поля профілю', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/profile", "host": ["{{baseUrl}}"], "path": ["api", "users", "profile"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications (Сповіщення)",
+      "item": [
+        {
+          "name": "Отримати сповіщення користувача",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Відповідь є масивом', function() {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications/1", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "1"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Позначити сповіщення як прочитане",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications/1/read", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "1", "read"] }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

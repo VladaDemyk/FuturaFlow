@@ -12,7 +12,7 @@ import java.util.List;
 public class FileCleanupService {
 
     private final InvoiceRepository invoiceRepository;
-    private final String uploadDir = "uploads/";
+    private String uploadDir = "uploads/";
 
     public FileCleanupService(InvoiceRepository invoiceRepository) {
         this.invoiceRepository = invoiceRepository;
